@@ -705,37 +705,37 @@ function hideErr()    { errBanner.classList.remove('show'); }
 
 // ── AUDIT ─────────────────────────────────────────────────────────────────────
 async function auditImage(item) {
+  // 1. Call your Vercel Proxy (NOT Anthropic directly)
   const res = await fetch('/api/audit', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    apiKey: apiKey,
-    imageMime: item.mime,
-    imageB64: item.base64,
-    prompt: 'Audit this retouched image against all 6 SOPs. Return only the JSON.',
-    systemPrompt: SOP_SYSTEM
-  })
-});
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
-      system: SOP_SYSTEM,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: item.mime, data: item.base64 } },
-          { type: 'text', text: 'Audit this retouched image against all 6 SOPs. Return only the JSON.' }
-        ]
-      }]
+      apiKey: apiKey,
+      imageMime: item.mime,
+      imageB64: item.base64,
+      prompt: 'Audit this retouched image against all 6 SOPs. Return only the JSON.',
+      systemPrompt: SOP_SYSTEM
     })
   });
+
+  // 2. Check if the server responded correctly
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
     throw new Error(e.error?.message || 'API error ' + res.status);
   }
+
+  // 3. Parse the data returned from your proxy
   const data = await res.json();
-  const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('\n')
-    .replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+  
+  // Extract the text from Claude's response
+  const text = data.content
+    .filter(b => b.type === 'text')
+    .map(b => b.text)
+    .join('\n')
+    .replace(/```json\s*/g, '')
+    .replace(/```\s*/g, '')
+    .trim();
+
   const parsed = JSON.parse(text);
   return parsed.issues || [];
 }
