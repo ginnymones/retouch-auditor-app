@@ -706,15 +706,16 @@ function hideErr()    { errBanner.classList.remove('show'); }
 // ── AUDIT ─────────────────────────────────────────────────────────────────────
 async function auditImage(item) {
   const res = await fetch('/api/audit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      apiKey: apiKey,
-      imageMime: item.mime,
-      imageB64: item.base64,
-      prompt: 'Audit this retouched image against all 6 SOPs. Return only the JSON.',
-      systemPrompt: SOP_SYSTEM
-  },
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    apiKey: apiKey,
+    imageMime: item.mime,
+    imageB64: item.base64,
+    prompt: 'Audit this retouched image against all 6 SOPs. Return only the JSON.',
+    systemPrompt: SOP_SYSTEM
+  })
+});
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1500,
